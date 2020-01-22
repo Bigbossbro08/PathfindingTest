@@ -5,9 +5,13 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class Unit : MonoBehaviour
 {
+    // Maybe wasn't a good idea to implement a rigidbody. Think I'll remove the behavior entirely.
     private Rigidbody rb;
+    
+    // Basic movement stuffs...
     [SerializeField] private Vector2 movement = Vector2.zero;
     [SerializeField] private float speed = 5;
+    
     // Start is called before the first frame update
     void Start()
     {
