@@ -128,9 +128,74 @@ public class PathfindingGrid
         return neightbortiles;
     }
 
+    // Trying to generate heatmap.
+    private void HeatmapGeneration(Vector2Int tilePoint)
+    {
+
+        if (tilePoint.x > size - 1 || tilePoint.x < 0)
+        {
+            Debug.Log("Out of index");
+            return;
+        }
+
+        if (tilePoint.y > size - 1 || tilePoint.y < 0)
+        {
+            Debug.Log("Out of index");
+            return;
+        }
+
+        // Doing those same stuffs as finding neighbors...
+        tiles[tilePoint.x, tilePoint.y].heatCost = 0;
+
+        for (int i = -1; i <= 1; i++)
+        {
+            for (int j = -1; j <= 1; j++)
+            {
+                if (i == 0 && j == 0)
+                    continue;
+
+                // Same old index checking...
+                int checkX = tilePoint.x + i, checkY = tilePoint.y + j;
+
+                if (checkX >= 0 && checkX < size && checkY >= 0 && checkY < size)
+                {
+                    // If neighboring tile's heat cost is same as center node then we change the heat cost.
+                    if (tiles[tilePoint.x, tilePoint.y].heatCost == tiles[checkX, checkY].heatCost)
+                    {
+                        // This is working as intended
+                        tiles[checkX, checkY].heatCost = tiles[tilePoint.x, tilePoint.y].heatCost + 1;
+
+                        // This part causes out of sync error. Haven't figured a way out to get neighbor nodes' heatmap generation yet.
+                        // Plan is to do some sorta neighbor check to keep the value same.
+                        // Next finding values will be changed only.
+
+
+                        //var neighbors = GetNeightbor(new Vector2Int(checkX, checkY));
+
+                        //foreach (var neighbor in neighbors)
+                        //{
+                        //    if (neighbor.Value.x > size -1)
+                        //        continue;
+                        //    if (neighbor.Value.x < 0)
+                        //        continue;
+                        //    if (neighbor.Value.y > size)
+                        //        continue;
+                        //    if (neighbor.Value.y < 0)
+                        //        continue;
+
+                        //    HeatmapGeneration(neighbor.Value);
+                        //}
+                    }
+                }
+            }
+        }
+    }
+
     public void FindPath(Vector3 target)
     {
-        // TODO
+        // First we need to generate a heatmap
+        
+        HeatmapGeneration(GetIndexFromGridPosition(target));
     }
 
     public Vector2Int GetIndexFromGridPosition(Vector3 position)
