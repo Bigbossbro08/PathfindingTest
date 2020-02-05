@@ -19,10 +19,10 @@ public class Pathfinder : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        grid.UpdateFlowField(target.position);
+        index = grid.GetIndexFromGridPosition(transform.position);
         if (pathFind == true)
         {
-            grid.UpdateFlowField(target.position);
-            index = grid.GetIndexFromGridPosition(transform.position);
             pathFind = false;
         }
     }

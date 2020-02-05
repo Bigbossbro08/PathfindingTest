@@ -56,7 +56,7 @@ public class PathfindingGrid
                     else if (i == targetindex.x && j == targetindex.y)
                         color = Color.green;
 
-                    //Debug.DrawRay(tiles[i, j].GetPositionIn3Dspace(), new Vector3(tiles[i, j].direction.x, 0, tiles[i, j].direction.y), color);
+                    Debug.DrawLine(tiles[i, j].GetPositionIn3Dspace(), tiles[i, j].GetPositionIn3Dspace() + (new Vector3(tiles[i, j].direction.x, 0, tiles[i, j].direction.y)) * .4f, color);
                 }
 
             }
@@ -88,7 +88,8 @@ public class PathfindingGrid
         // Reset nodes
         foreach (Tile t in tiles)
         {
-            t.distance = -1;
+            if (t.distance != -2)
+                t.distance = -1;
         }
 
         // We need a queue that'll track of tiles.
@@ -98,8 +99,88 @@ public class PathfindingGrid
         Tile targetTile = GetTileFromGridPosition(position);
         queue.Enqueue(targetTile);
 
+        LocalOptimaFix(targetTile, queue);
+
+        // Our tile starts the distance value with 0.
         targetTile.distance = 0;
         CreateHeatmap(targetTile, queue);
+        CreateVectorField();
+    }
+
+    private void LocalOptimaFix(Tile targetTile, Queue<Tile> queue)
+    {
+        Vector2Int index = GetIndexFromTile(targetTile);
+
+        if (index.x + 1 > size - 1)
+        {
+            index.x = index.x - 1;
+        }
+        
+        if (index.y + 1 > size - 1)
+        {
+            index.y = index.y - 1;
+        }
+
+        for (int i = 0; i <= 1; i++)
+        {
+            for (int j = 0; j <= 1; j++)
+            {
+
+                if (tiles[index.x + i, index.y + j].distance != -2)
+                {
+                    tiles[index.x + i, index.y + j].distance = 0;
+                    queue.Enqueue(tiles[index.x + i, index.y + j]);
+                }
+            }
+        }
+    }
+
+    private void CreateVectorField()
+    {
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                Vector2 direction;
+
+                int left, right, up, down;
+                left = right = up = down = tiles[i, j].distance;
+
+                if (i + 1 < size && tiles[i + 1, j].distance != -2)
+                {
+                    right = tiles[i + 1, j].distance;
+                }
+
+                if (i - 1 >= 0 && tiles[i - 1, j].distance != -2)
+                {
+                    left = tiles[i - 1, j].distance;
+                }
+
+                if (j + 1 < size && tiles[i, j + 1].distance != -2)
+                {
+                    up = tiles[i, j + 1].distance;
+                }
+
+                if (j - 1 >= 0 && tiles[i, j - 1].distance != -2)
+                {
+                    down = tiles[i, j - 1].distance;
+                }
+
+                direction.x = (float)left - right;
+                direction.y = (float)down - up;
+
+                if (direction.x < 0 && left == tiles[i, j].distance)
+                    direction.x = 0.0f;
+                else if (direction.x > 0 && right == tiles[i, j].distance)
+                    direction.x = 0.0f;
+                if (direction.y < 0 && down == tiles[i, j].distance)
+                    direction.y = 0.0f;
+                else if (direction.y > 0 && up == tiles[i, j].distance)
+                    direction.y = 0.0f;
+
+                tiles[i, j].direction = direction.normalized;
+            }
+        }
     }
 
     private void CreateHeatmap(Tile targetTile, Queue<Tile> queue)
@@ -241,7 +322,7 @@ public class PathfindingGrid
         else if (i < 0)
             i = 0;
 
-        int j = Mathf.RoundToInt(((2 * position.z) - (2 * origin.z) - tileSize) / (tileSize * 2));
+        int j = Mathf.RoundToInt((2 * (position.z - origin.z) - tileSize) / (tileSize * 2));
         if (j > size - 1)
             j = (int)size - 1;
         else if (j < 0)
@@ -276,6 +357,7 @@ public class Tile
 {
     public Vector2 position = Vector2.zero;
     public int distance = 0; // Planned for flow field. Not sure if it's the right way.
+    public Vector2 direction;
 
     public Tile()
     {
