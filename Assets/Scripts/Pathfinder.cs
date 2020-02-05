@@ -7,6 +7,7 @@ public class Pathfinder : MonoBehaviour
     public PathfindingGrid grid;
     public Vector2Int index;
     public Transform target;
+    public bool pathFind = true;
 
     // Start is called before the first frame update
     void Start()
@@ -18,9 +19,12 @@ public class Pathfinder : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // Basic stuffs. Finding path and update the index.
-        grid.FindPath(target.position);
-        index = grid.GetIndexFromGridPosition(transform.position);
+        if (pathFind == true)
+        {
+            grid.UpdateFlowField(target.position);
+            index = grid.GetIndexFromGridPosition(transform.position);
+            pathFind = false;
+        }
     }
 
     private void OnDrawGizmos()
