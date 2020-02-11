@@ -10,7 +10,8 @@ public class PathfindingGrid
     [SerializeField] private uint size = 50;
     [SerializeField] private float tileSize = 48;
     public Tile[,] tiles = new Tile[50, 50];
-    [SerializeField] private Vector3 origin = Vector3.zero;
+    public Vector3 origin = Vector3.zero;
+    [SerializeField] private float angle = 0;
 
     public void DebugTiles(Vector3 unitposition, Vector3 targetposition)
     {
@@ -41,13 +42,17 @@ public class PathfindingGrid
                 for (int j = 0; j < size; j++)
                 {
                     // Draws tile for our grid
-                    Debug.DrawLine(tiles[i, j].GetPositionIn3Dspace() + Vector3.right * (tileSize / 3) + Vector3.forward * (tileSize / 3), tiles[i, j].GetPositionIn3Dspace() + Vector3.right * (tileSize / 3) - Vector3.forward * (tileSize / 3), Color.black);
-                    Debug.DrawLine(tiles[i, j].GetPositionIn3Dspace() - Vector3.right * (tileSize / 3) + Vector3.forward * (tileSize / 3), tiles[i, j].GetPositionIn3Dspace() - Vector3.right * (tileSize / 3) - Vector3.forward * (tileSize / 3), Color.black);
-                    Debug.DrawLine(tiles[i, j].GetPositionIn3Dspace() + Vector3.forward * (tileSize / 3) + Vector3.right * (tileSize / 3), tiles[i, j].GetPositionIn3Dspace() + Vector3.forward * (tileSize / 3) - Vector3.right * (tileSize / 3), Color.black);
-                    Debug.DrawLine(tiles[i, j].GetPositionIn3Dspace() - Vector3.forward * (tileSize / 3) + Vector3.right * (tileSize / 3), tiles[i, j].GetPositionIn3Dspace() - Vector3.forward * (tileSize / 3) - Vector3.right * (tileSize / 3), Color.black);
+                    Vector3 pos = GetGridPositionFromIndex(new Vector2Int(i, j));
+                    Vector3 dir = new Vector3(tiles[i, j].direction.x, 0, tiles[i, j].direction.y);
+
+                    Debug.DrawLine(pos + Vector3.right * (tileSize / 3) + Vector3.forward * (tileSize / 3), pos + Vector3.right * (tileSize / 3) - Vector3.forward * (tileSize / 3), Color.black);
+                    Debug.DrawLine(pos - Vector3.right * (tileSize / 3) + Vector3.forward * (tileSize / 3), pos - Vector3.right * (tileSize / 3) - Vector3.forward * (tileSize / 3), Color.black);
+                    Debug.DrawLine(pos + Vector3.forward * (tileSize / 3) + Vector3.right * (tileSize / 3), pos + Vector3.forward * (tileSize / 3) - Vector3.right * (tileSize / 3), Color.black);
+                    Debug.DrawLine(pos - Vector3.forward * (tileSize / 3) + Vector3.right * (tileSize / 3), pos - Vector3.forward * (tileSize / 3) - Vector3.right * (tileSize / 3), Color.black);
 
                     // Trying to drawout a heatmap generation for flowfield pathfinding.
-                    Handles.Label(tiles[i, j].GetPositionIn3Dspace(), tiles[i, j].distance.ToString());
+                    if (tiles[i, j].distance != -2)
+                        Handles.Label(pos, tiles[i, j].distance.ToString());
 
                     // Making more easier to point out our unit and target again.
                     Color color = Color.red;
@@ -56,7 +61,7 @@ public class PathfindingGrid
                     else if (i == targetindex.x && j == targetindex.y)
                         color = Color.green;
 
-                    Debug.DrawLine(tiles[i, j].GetPositionIn3Dspace(), tiles[i, j].GetPositionIn3Dspace() + (new Vector3(tiles[i, j].direction.x, 0, tiles[i, j].direction.y)) * .4f, color);
+                    Debug.DrawLine(pos, pos + dir * .4f, color);
                 }
 
             }
@@ -66,20 +71,22 @@ public class PathfindingGrid
         List<Tile> neightborTiles = GetNeightborAStar(unitIndex);
         foreach (var neightborTile in neightborTiles)
         {
-            Debug.DrawLine(neightborTile.GetPositionIn3Dspace(), neightborTile.GetPositionIn3Dspace() + (Vector3.forward + Vector3.right) * 0.2f, Color.yellow);
-            Debug.DrawLine(neightborTile.GetPositionIn3Dspace(), neightborTile.GetPositionIn3Dspace() + (Vector3.forward + Vector3.left) * 0.2f, Color.yellow);
-            Debug.DrawLine(neightborTile.GetPositionIn3Dspace(), neightborTile.GetPositionIn3Dspace() + (Vector3.back + Vector3.right) * 0.2f, Color.yellow);
-            Debug.DrawLine(neightborTile.GetPositionIn3Dspace(), neightborTile.GetPositionIn3Dspace() + (Vector3.back + Vector3.left) * 0.2f, Color.yellow);
+            var pos = GetGridPositionFromTile(neightborTile);
+            Debug.DrawLine(pos, pos + (Vector3.forward + Vector3.right) * 0.2f, Color.yellow);
+            Debug.DrawLine(pos, pos + (Vector3.forward + Vector3.left) * 0.2f, Color.yellow);
+            Debug.DrawLine(pos, pos + (Vector3.back + Vector3.right) * 0.2f, Color.yellow);
+            Debug.DrawLine(pos, pos + (Vector3.back + Vector3.left) * 0.2f, Color.yellow);
         }
 
         // Drawing out our neightbor tiles for our target as X mark.
         neightborTiles = GetNeightborAStar(targetindex);
         foreach (var neightborTile in neightborTiles)
         {
-            Debug.DrawLine(neightborTile.GetPositionIn3Dspace(), neightborTile.GetPositionIn3Dspace() + (Vector3.forward + Vector3.right) * 0.2f, Color.yellow);
-            Debug.DrawLine(neightborTile.GetPositionIn3Dspace(), neightborTile.GetPositionIn3Dspace() + (Vector3.forward + Vector3.left) * 0.2f, Color.yellow);
-            Debug.DrawLine(neightborTile.GetPositionIn3Dspace(), neightborTile.GetPositionIn3Dspace() + (Vector3.back + Vector3.right) * 0.2f, Color.yellow);
-            Debug.DrawLine(neightborTile.GetPositionIn3Dspace(), neightborTile.GetPositionIn3Dspace() + (Vector3.back + Vector3.left) * 0.2f, Color.yellow);
+            var pos = GetGridPositionFromTile(neightborTile);
+            Debug.DrawLine(pos, pos + (Vector3.forward + Vector3.right) * 0.2f, Color.yellow);
+            Debug.DrawLine(pos, pos + (Vector3.forward + Vector3.left) * 0.2f, Color.yellow);
+            Debug.DrawLine(pos, pos + (Vector3.back + Vector3.right) * 0.2f, Color.yellow);
+            Debug.DrawLine(pos, pos + (Vector3.back + Vector3.left) * 0.2f, Color.yellow);
         }
     }
 
@@ -97,12 +104,9 @@ public class PathfindingGrid
 
         // Initialization...
         Tile targetTile = GetTileFromGridPosition(position);
-        queue.Enqueue(targetTile);
+        //queue.Enqueue(targetTile);    // This process is done in LocalOptimaFix. So no point adding here.
 
         LocalOptimaFix(targetTile, queue);
-
-        // Our tile starts the distance value with 0.
-        targetTile.distance = 0;
         CreateHeatmap(targetTile, queue);
         CreateVectorField();
     }
@@ -204,23 +208,20 @@ public class PathfindingGrid
         CreateHeatmap(next, queue);
     }
 
-    public void GenerateTiles(Vector3 _origin)
+    public void GenerateTiles()
     {
         // Basic tile generation.
-        origin = _origin; // origin position for the tile generation.
         tiles = new Tile[size, size]; // Going with square size for now.
         for (int i = 0; i < size; i++)
         {
             for (int j = 0; j < size; j++)
             {
-                float x = origin.x + ((i * tileSize) + (tileSize / 2));
-                float y = origin.z + ((j * tileSize) + (tileSize / 2));
-                tiles[i, j] = new Tile(new Vector2(x, y));
+                tiles[i, j] = new Tile(new Vector2(i, j));
             }
         }
     }
 
-    private List<Tile> GetNeightborAStar(Vector2Int tilePoint)
+    public List<Tile> GetNeightborAStar(Vector2Int tilePoint)
     {
         List<Tile> neightbortiles = new List<Tile>();
 
@@ -249,42 +250,42 @@ public class PathfindingGrid
     }
 
     // Keeping this for now. Probably remove later.
-    private List<Tile> GetNeightborFlowField(Vector2Int tilePoint)
-    {
-        List<Tile> neightbortiles = new List<Tile>();
+    //private List<Tile> GetNeightborFlowField(Vector2Int tilePoint)
+    //{
+    //    List<Tile> neightbortiles = new List<Tile>();
 
-        Tile neighborTile;
-        if (tilePoint.x + 1 >= 0 && tilePoint.x + 1 < size && tilePoint.y >= 0 && tilePoint.y < size)
-        {
-            neighborTile = tiles[tilePoint.x + 1, tilePoint.y];
-            neightbortiles.Add(neighborTile);
-        }
+    //    Tile neighborTile;
+    //    if (tilePoint.x + 1 >= 0 && tilePoint.x + 1 < size && tilePoint.y >= 0 && tilePoint.y < size)
+    //    {
+    //        neighborTile = tiles[tilePoint.x + 1, tilePoint.y];
+    //        neightbortiles.Add(neighborTile);
+    //    }
 
-        if (tilePoint.x - 1 >= 0 && tilePoint.x - 1 < size && tilePoint.y >= 0 && tilePoint.y < size)
-        {
-            neighborTile = tiles[tilePoint.x - 1, tilePoint.y];
-            neightbortiles.Add(neighborTile);
-        }
+    //    if (tilePoint.x - 1 >= 0 && tilePoint.x - 1 < size && tilePoint.y >= 0 && tilePoint.y < size)
+    //    {
+    //        neighborTile = tiles[tilePoint.x - 1, tilePoint.y];
+    //        neightbortiles.Add(neighborTile);
+    //    }
 
-        if (tilePoint.x >= 0 && tilePoint.x < size && tilePoint.y + 1 >= 0 && tilePoint.y + 1 < size)
-        {
-            neighborTile = tiles[tilePoint.x, tilePoint.y + 1];
-            neightbortiles.Add(neighborTile);
-        }
+    //    if (tilePoint.x >= 0 && tilePoint.x < size && tilePoint.y + 1 >= 0 && tilePoint.y + 1 < size)
+    //    {
+    //        neighborTile = tiles[tilePoint.x, tilePoint.y + 1];
+    //        neightbortiles.Add(neighborTile);
+    //    }
 
-        if (tilePoint.x >= 0 && tilePoint.x < size && tilePoint.y - 1 >= 0 && tilePoint.y - 1 < size)
-        {
-            neighborTile = tiles[tilePoint.x, tilePoint.y - 1];
-            neightbortiles.Add(neighborTile);
-        }
+    //    if (tilePoint.x >= 0 && tilePoint.x < size && tilePoint.y - 1 >= 0 && tilePoint.y - 1 < size)
+    //    {
+    //        neighborTile = tiles[tilePoint.x, tilePoint.y - 1];
+    //        neightbortiles.Add(neighborTile);
+    //    }
 
-        return neightbortiles;
-    }
+    //    return neightbortiles;
+    //}
 
     private List<Tile> GetNeightborFlowFieldFromTile(Tile tile)
     {
         List<Tile> neighbours = new List<Tile>();
-        Vector2Int tilePoint = GetIndexFromGridPosition(tile.GetPositionIn3Dspace());
+        Vector2Int tilePoint = GetIndexFromTile(tile); //new Vector2Int((int)tile.GetLocalPosition(angle).x, (int)tile.GetLocalPosition(angle).z);
 
         // Right
         if (tilePoint.x + 1 < size && tiles[tilePoint.x + 1, tilePoint.y].distance == -1)
@@ -313,24 +314,6 @@ public class PathfindingGrid
         return neighbours;
     }
 
-    public Vector2Int GetIndexFromGridPosition(Vector3 position)
-    {
-        // Made this by reversing from the grid tile generation. Gave some headache for a while. Used basic algebra to get index value. Index check done as well. Maybe not in the best way and don't wanna touch it either.
-        int i = Mathf.RoundToInt((2 * (position.x -  origin.x) - tileSize) / (tileSize * 2));
-        if (i > size - 1)
-            i = (int)size - 1;
-        else if (i < 0)
-            i = 0;
-
-        int j = Mathf.RoundToInt((2 * (position.z - origin.z) - tileSize) / (tileSize * 2));
-        if (j > size - 1)
-            j = (int)size - 1;
-        else if (j < 0)
-            j = 0;
-
-        return new Vector2Int(i, j);
-    }
-
     public Tile GetTileFromGridPosition(Vector3 position)
     {
         Vector2Int index = GetIndexFromGridPosition(position);
@@ -339,38 +322,69 @@ public class PathfindingGrid
 
     public Vector2Int GetIndexFromTile(Tile tile)
     {
-        return GetIndexFromGridPosition(tile.GetPositionIn3Dspace());
-    }
-
-    public Vector3 GetOrigin() // I think I should just public the variable.
-    {
-        return origin;
+        return GetIndexFromGridPosition(tile.GetLocalPosition(angle));
     }
 
     public Vector3 GetGridPositionFromIndex(Vector2Int index)
     {
-        return tiles[index.x, index.y].GetPositionIn3Dspace();
+        Vector3 position;
+        Vector3 localPos = tiles[index.x, index.y].GetLocalPosition(angle);
+        position.x = origin.x + (tileSize * localPos.x);
+        position.y = origin.y;
+        position.z = origin.z + (tileSize * localPos.z);
+        return position;
+    }
+
+    public Vector3 GetGridPositionFromTile(Tile tile)
+    {
+        Vector3 position;
+        Vector3 localPos = tile.GetLocalPosition(angle);
+        position.x = origin.x + (tileSize * localPos.x);
+        position.y = origin.y;
+        position.z = origin.z + (tileSize * localPos.z);
+        return position;
+    }
+
+    public Vector2Int GetIndexFromGridPosition(Vector3 position)
+    {
+        int i = Mathf.RoundToInt((position.x - origin.x) / tileSize); //Mathf.RoundToInt((2 * (position.x -  origin.x) - tileSize) / (tileSize * 2));
+        if (i > size - 1)
+            i = (int)size - 1;
+        else if (i < 0)
+            i = 0;
+
+        int j = Mathf.RoundToInt((position.z - origin.z) / tileSize); //= Mathf.RoundToInt((2 * (position.z - origin.z) - tileSize) / (tileSize * 2));
+        if (j > size - 1)
+            j = (int)size - 1;
+        else if (j < 0)
+            j = 0;
+
+        return new Vector2Int(i, j);
     }
 }
 
 public class Tile
 {
-    public Vector2 position = Vector2.zero;
-    public int distance = 0; // Planned for flow field. Not sure if it's the right way.
+    private Vector2 localPosition = Vector2.zero; // Sanity check.
+    public int distance = 0; // It is sometimes called wavePoint, heatcost but essentially the same thing.
     public Vector2 direction;
 
     public Tile()
     {
-        position = Vector2.zero;
+        localPosition = Vector2.zero;
     }
 
     public Tile(Vector2 _position)
     {
-        position = _position;
+        localPosition = _position;
     }
 
-    public Vector3 GetPositionIn3Dspace()
+    public Vector3 GetLocalPosition(float angle)
     {
-        return new Vector3(position.x, 0, position.y);
+        Vector3 position;
+        position.x = (localPosition.x * Mathf.Cos(angle * Mathf.Deg2Rad)) - (localPosition.y * Mathf.Sin(angle * Mathf.Deg2Rad));
+        position.y = 0;
+        position.z = (localPosition.x * Mathf.Sin(angle * Mathf.Deg2Rad)) + (localPosition.y * Mathf.Cos(angle * Mathf.Deg2Rad));
+        return position;
     }
 }
