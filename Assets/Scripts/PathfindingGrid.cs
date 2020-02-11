@@ -322,44 +322,49 @@ public class PathfindingGrid
 
     public Vector2Int GetIndexFromTile(Tile tile)
     {
-        return GetIndexFromGridPosition(tile.GetLocalPosition(angle));
+        return GetIndexFromGridPosition(tile.GetLocalPosition());
     }
 
     public Vector3 GetGridPositionFromIndex(Vector2Int index)
     {
         Vector3 position;
-        Vector3 localPos = tiles[index.x, index.y].GetLocalPosition(angle);
-        position.x = origin.x + (tileSize * localPos.x);
+        Vector3 localPosition = tiles[index.x, index.y].GetLocalPosition();
+        position.x = origin.x + (tileSize * ((localPosition.x * Mathf.Cos(angle * Mathf.Deg2Rad)) - (localPosition.z * Mathf.Sin(angle * Mathf.Deg2Rad))));
         position.y = origin.y;
-        position.z = origin.z + (tileSize * localPos.z);
+        position.z = origin.z + (tileSize * ((localPosition.x * Mathf.Sin(angle * Mathf.Deg2Rad)) + (localPosition.z * Mathf.Cos(angle * Mathf.Deg2Rad))));
         return position;
     }
 
     public Vector3 GetGridPositionFromTile(Tile tile)
     {
         Vector3 position;
-        Vector3 localPos = tile.GetLocalPosition(angle);
-        position.x = origin.x + (tileSize * localPos.x);
+        Vector3 localPosition = tile.GetLocalPosition();
+        position.x = origin.x + (tileSize * ((localPosition.x * Mathf.Cos(angle * Mathf.Deg2Rad)) - (localPosition.z * Mathf.Sin(angle * Mathf.Deg2Rad))));
         position.y = origin.y;
-        position.z = origin.z + (tileSize * localPos.z);
+        position.z = origin.z + (tileSize * ((localPosition.x * Mathf.Sin(angle * Mathf.Deg2Rad)) + (localPosition.z * Mathf.Cos(angle * Mathf.Deg2Rad))));
         return position;
     }
 
     public Vector2Int GetIndexFromGridPosition(Vector3 position)
     {
-        int i = Mathf.RoundToInt((position.x - origin.x) / tileSize); //Mathf.RoundToInt((2 * (position.x -  origin.x) - tileSize) / (tileSize * 2));
+        //int i = Mathf.RoundToInt(Mathf.Cos(-angle * Mathf.Deg2Rad) * ((position.x - origin.x) / tileSize)); //Mathf.RoundToInt((2 * (position.x -  origin.x) - tileSize) / (tileSize * 2));
+        position.x -= origin.x;
+        position.z -= origin.z;
+        float i = (position.x * Mathf.Cos(-angle * Mathf.Deg2Rad)) - (position.z * Mathf.Sin(-angle * Mathf.Deg2Rad));
+        
         if (i > size - 1)
             i = (int)size - 1;
         else if (i < 0)
             i = 0;
 
-        int j = Mathf.RoundToInt((position.z - origin.z) / tileSize); //= Mathf.RoundToInt((2 * (position.z - origin.z) - tileSize) / (tileSize * 2));
+        float j = (position.x * Mathf.Sin(-angle * Mathf.Deg2Rad)) + (position.z * Mathf.Cos(-angle * Mathf.Deg2Rad)); //= Mathf.RoundToInt((2 * (position.z - origin.z) - tileSize) / (tileSize * 2));
+        
         if (j > size - 1)
             j = (int)size - 1;
         else if (j < 0)
             j = 0;
 
-        return new Vector2Int(i, j);
+        return new Vector2Int(Mathf.RoundToInt(i), Mathf.RoundToInt(j));
     }
 }
 
@@ -379,12 +384,8 @@ public class Tile
         localPosition = _position;
     }
 
-    public Vector3 GetLocalPosition(float angle)
+    public Vector3 GetLocalPosition()
     {
-        Vector3 position;
-        position.x = (localPosition.x * Mathf.Cos(angle * Mathf.Deg2Rad)) - (localPosition.y * Mathf.Sin(angle * Mathf.Deg2Rad));
-        position.y = 0;
-        position.z = (localPosition.x * Mathf.Sin(angle * Mathf.Deg2Rad)) + (localPosition.y * Mathf.Cos(angle * Mathf.Deg2Rad));
-        return position;
+        return new Vector3(localPosition.x, 0, localPosition.y);
     }
 }
