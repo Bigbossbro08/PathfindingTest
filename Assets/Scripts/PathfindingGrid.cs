@@ -252,7 +252,7 @@ public class PathfindingGrid
     private List<Tile> GetNeightborFlowFieldFromTile(Tile tile)
     {
         List<Tile> neighbours = new List<Tile>();
-        Vector2Int tilePoint = GetIndexFromTile(tile); //new Vector2Int((int)tile.GetLocalPosition(angle).x, (int)tile.GetLocalPosition(angle).z);
+        Vector2Int tilePoint = GetIndexFromTile(tile);
 
         // Right
         if (tilePoint.x + 1 < size && tiles[tilePoint.x + 1, tilePoint.y].distance == -1)
@@ -281,17 +281,6 @@ public class PathfindingGrid
         return neighbours;
     }
 
-    public Tile GetTileFromGridPosition(Vector3 position)
-    {
-        Vector2Int index = GetIndexFromGridPosition(position);
-        return tiles[index.x, index.y];
-    }
-
-    public Vector2Int GetIndexFromTile(Tile tile)
-    {
-        return GetIndexFromGridPosition(GetGridPositionFromTile(tile));
-    }
-
     public static Vector3 ApplyRotation(Vector3 position, float angle) // There might be a Unity function for this but I think I'll keep this way. Mainly because I have to convert it to openage.
     {
         float x = (position.x * Mathf.Cos(angle * Mathf.Deg2Rad)) - (position.z * Mathf.Sin(angle * Mathf.Deg2Rad));
@@ -303,46 +292,48 @@ public class PathfindingGrid
     {
         Vector3 localPosition = tiles[index.x, index.y].GetLocalPosition();
         Vector3 position = origin + ApplyRotation(localPosition, angle);
-        //position.x = origin.x + (tileSize * ((localPosition.x * Mathf.Cos(angle * Mathf.Deg2Rad)) - (localPosition.z * Mathf.Sin(angle * Mathf.Deg2Rad))));
-        //position.y = origin.y;
-        //position.z = origin.z + (tileSize * ((localPosition.x * Mathf.Sin(angle * Mathf.Deg2Rad)) + (localPosition.z * Mathf.Cos(angle * Mathf.Deg2Rad))));
-        return position;
+        return position * tileSize;
     }
 
     public Vector3 GetGridPositionFromTile(Tile tile)
     {
         Vector3 localPosition = tile.GetLocalPosition();
         Vector3 position = origin + ApplyRotation(localPosition, angle);
-        //position.x = origin.x + (tileSize * ((localPosition.x * Mathf.Cos(angle * Mathf.Deg2Rad)) - (localPosition.z * Mathf.Sin(angle * Mathf.Deg2Rad))));
-        //position.y = origin.y;
-        //position.z = origin.z + (tileSize * ((localPosition.x * Mathf.Sin(angle * Mathf.Deg2Rad)) + (localPosition.z * Mathf.Cos(angle * Mathf.Deg2Rad))));
-        return position;
+        return position * tileSize;
     }
 
     public Vector2Int GetIndexFromGridPosition(Vector3 position)
     {
-        //int i = Mathf.RoundToInt(Mathf.Cos(-angle * Mathf.Deg2Rad) * ((position.x - origin.x) / tileSize)); //Mathf.RoundToInt((2 * (position.x -  origin.x) - tileSize) / (tileSize * 2));
-        
+        position /= tileSize;
         position.x -= origin.x;
         position.z -= origin.z;
 
         position = ApplyRotation(position, -angle);
 
-        float i = position.x; // (position.x * Mathf.Cos(-angle * Mathf.Deg2Rad)) - (position.z * Mathf.Sin(-angle * Mathf.Deg2Rad));
-        
+        float i = position.x; 
         if (i > size - 1)
             i = (int)size - 1;
         else if (i < 0)
             i = 0;
 
-        float j = position.z; //(position.x * Mathf.Sin(-angle * Mathf.Deg2Rad)) + (position.z * Mathf.Cos(-angle * Mathf.Deg2Rad)); //= Mathf.RoundToInt((2 * (position.z - origin.z) - tileSize) / (tileSize * 2));
-        
+        float j = position.z; 
         if (j > size - 1)
             j = (int)size - 1;
         else if (j < 0)
             j = 0;
 
         return new Vector2Int(Mathf.RoundToInt(i), Mathf.RoundToInt(j));
+    }
+
+    public Tile GetTileFromGridPosition(Vector3 position)
+    {
+        Vector2Int index = GetIndexFromGridPosition(position);
+        return tiles[index.x, index.y];
+    }
+
+    public Vector2Int GetIndexFromTile(Tile tile)
+    {
+        return GetIndexFromGridPosition(GetGridPositionFromTile(tile));
     }
 }
 
